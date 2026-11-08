@@ -14,7 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
-- **The window is rounded on Linux.** The page filled the window's corners with a square, inside the rounded shadow the desktop draws around it, so the window looked like a square sitting in a rounded frame. The page now ends where the desktop's shape ends, and the sheet's corners follow it.
+- **The window is rounded on Linux.** The page filled the window's corners with a square, inside the rounded frame the desktop draws around it, so the window looked like a square in a rounded frame. The page now ends where the desktop's frame ends, and the sheet's corners follow it. The window keeps the frame the desktop draws around it, and squares its corners again when maximized or full-screen, where the desktop draws none.
 - **A song picked from the search suggestions plays its radio.** Picking a song under the search field queued the other songs the text matched around it, and on a playlist's page it asked YouTube Music for that playlist's queue. The song now plays alone with the mix YouTube Music generates for it, as Start radio does. Albums, artists and playlists in the suggestions still open their page.
 
 ## [0.6.1] - 2026-11-05

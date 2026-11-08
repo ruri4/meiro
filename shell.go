@@ -148,7 +148,7 @@ func (a *app) rail(c *ui.Context, bar ui.TitleBar) {
 
 // windowRadius reports the radius the desktop gives the window's own corners,
 // or 0 where it gives none. The page is cut to it, so the window ends where
-// the desktop's shadow and border do.
+// the decorations the desktop draws around it do.
 func windowRadius() float32 { return gtkwindow.Radius() }
 
 // sheetRadius is the radius of the sheet's corners: the window's, plus the
@@ -161,15 +161,31 @@ func sheetRadius() float32 {
 }
 
 // roundWindow cuts the page to the shape the desktop gives the window. The
-// desktop draws its shadow and border around that shape and shows whatever
-// the page leaves unpainted, so a page cut to it ends where they do. The zoom
-// is undone because the clip goes through the layout transform.
+// desktop draws its decorations around that shape and shows whatever the page
+// leaves unpainted, so a page cut to it ends where they do. The zoom is undone
+// because the clip goes through the layout transform.
+//
+// A window that fills the screen keeps its corners square: the desktop draws
+// no decorations for a maximized or full-screen window, so a page cut to a
+// curve would leave the corners showing what lies behind them.
 func (a *app) roundWindow(c *ui.Context) {
 	r := windowRadius()
 	if r <= 0 {
 		return
 	}
+	if a.windowFillsScreen() {
+		c.Root().Background(ui.Transparent)
+		return
+	}
 	c.Root().Background(ui.Transparent).Radius(r / a.zoom()).Clip()
+}
+
+// windowFillsScreen reports whether the window covers the screen.
+func (a *app) windowFillsScreen() bool {
+	if a.desktop == nil || a.desktop.win == nil {
+		return false
+	}
+	return a.desktop.win.IsMaximized() || a.desktop.win.IsFullScreen()
 }
 
 // sheetCorner is the side of the square painted behind each of the sheet's

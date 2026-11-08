@@ -30,6 +30,7 @@ import (
 	"github.com/elianiva/meiro/internal/applog"
 	"github.com/elianiva/meiro/internal/audio"
 	"github.com/elianiva/meiro/internal/diskcache"
+	"github.com/elianiva/meiro/internal/gtkwindow"
 	"github.com/elianiva/meiro/internal/memprof"
 	"github.com/elianiva/meiro/internal/proc"
 	"github.com/elianiva/meiro/internal/report"
@@ -63,7 +64,7 @@ func main() {
 		a.setup()
 		a.displayScale = displayScale()
 		mygo.Screen.OnDisplaysChanged(func() { a.update(func() { a.displayScale = displayScale() }) })
-		a.desktop = &desktop{win: mygo.NewWindow(mygo.WindowOptions{
+		windowOpts := mygo.WindowOptions{
 			Title:         "Meiro",
 			Width:         1180,
 			Height:        760,
@@ -71,12 +72,14 @@ func main() {
 			MinHeight:     560,
 			StateKey:      "meiro",
 			TitleBarStyle: mygo.TitleBarHidden,
-			// The page rounds the window's own corners on Linux (roundWindow),
-			// and only a window that shows what the page leaves unpainted can
-			// end at a curve.
-			Transparent: runtime.GOOS == "linux",
-			Content:     ui.View(a.frame),
-		})}
+			Content:       ui.View(a.frame),
+		}
+		// The page rounds the window's own corners (roundWindow), and the
+		// corners it cuts are only see-through on a surface with an alpha
+		// channel, which a radius asks the window for. The window keeps the
+		// decorations GTK draws around them.
+		windowOpts.CornerRadius = int(gtkwindow.Radius())
+		a.desktop = &desktop{win: mygo.NewWindow(windowOpts)}
 		controls := a.systemMediaControls()
 		controls.Window = a.desktop.win.NativeHandle()
 		session, err := systemmedia.New(controls)
