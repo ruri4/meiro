@@ -71,7 +71,11 @@ func main() {
 			MinHeight:     560,
 			StateKey:      "meiro",
 			TitleBarStyle: mygo.TitleBarHidden,
-			Content:       ui.View(a.frame),
+			// The page rounds the window's own corners on Linux (roundWindow),
+			// and only a window that shows what the page leaves unpainted can
+			// end at a curve.
+			Transparent: runtime.GOOS == "linux",
+			Content:     ui.View(a.frame),
 		})}
 		controls := a.systemMediaControls()
 		controls.Window = a.desktop.win.NativeHandle()

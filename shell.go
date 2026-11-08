@@ -7,6 +7,7 @@ import (
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
 
+	"github.com/elianiva/meiro/internal/gtkwindow"
 	"github.com/elianiva/meiro/internal/keymap"
 	"github.com/elianiva/meiro/m3"
 )
@@ -34,6 +35,7 @@ func (a *app) view(c *ui.Context) {
 	// The zoom comes first: the frame that sets another one builds again at
 	// the new size, and everything below measures the window it zoomed.
 	c.SetZoom(a.zoom())
+	a.roundWindow(c)
 	// The artwork comes before the theme: a cover whose colour just landed
 	// draws its theme this frame, and the glide it starts asks for the frames
 	// that follow, rather than waiting for the next unrelated repaint.
@@ -46,7 +48,6 @@ func (a *app) view(c *ui.Context) {
 	// border and the sheet between them cover it, so a frame fills the window
 	// as the sheet and a thin ring rather than as a full-window quad under
 	// everything.
-
 	a.syncLocation()
 	if a.notice != "" {
 		if a.noticeHelp {
@@ -145,6 +146,32 @@ func (a *app) rail(c *ui.Context, bar ui.TitleBar) {
 	}
 }
 
+// windowRadius reports the radius the desktop gives the window's own corners,
+// or 0 where it gives none. The page is cut to it, so the window ends where
+// the desktop's shadow and border do.
+func windowRadius() float32 { return gtkwindow.Radius() }
+
+// sheetRadius is the radius of the sheet's corners: the window's, plus the
+// inset between them, so the two curves run parallel.
+func sheetRadius() float32 {
+	if r := windowRadius(); r > 0 {
+		return r + sheetInset
+	}
+	return m3.ExtraLarge
+}
+
+// roundWindow cuts the page to the shape the desktop gives the window. The
+// desktop draws its shadow and border around that shape and shows whatever
+// the page leaves unpainted, so a page cut to it ends where they do. The zoom
+// is undone because the clip goes through the layout transform.
+func (a *app) roundWindow(c *ui.Context) {
+	r := windowRadius()
+	if r <= 0 {
+		return
+	}
+	c.Root().Background(ui.Transparent).Radius(r / a.zoom()).Clip()
+}
+
 // sheetCorner is the side of the square painted behind each of the sheet's
 // corners: the inset, plus the reach of a continuous corner, 1.528665 of its
 // radius. The sheet's own fill covers all of it but the rounded band the
@@ -177,7 +204,7 @@ func (a *app) sheet(c *ui.Context, bar ui.TitleBar) {
 	ui.Box(c).Absolute().Bottom(0).Left(0).Size(sheetCorner, sheetCorner).Background(tint)
 	ui.Box(c).Absolute().Bottom(0).Right(0).Size(sheetCorner, sheetCorner).Background(tint)
 	sheet := ui.Column(c.Key("sheet")).Absolute().Top(top).Left(0).Right(sheetInset).Bottom(sheetInset).
-		Radius(m3.ExtraLarge)
+		Radius(sheetRadius())
 	if !a.nowPlaying.open || a.nowPlaying.closing {
 		sheet.Background(sc.Surface)
 	}
@@ -344,7 +371,7 @@ func (a *app) message(c *ui.Context, icon *ui.SVG, title, body, action string, r
 // These decorative masks must not take pointer events from controls beneath
 // them.
 func sheetCorners(c *ui.Context, tint ui.Color) {
-	n := float32(m3.ExtraLarge) * sheetReach
+	n := sheetRadius() * sheetReach
 	for i, corner := range sheetCornerShapes {
 		piece := ui.Icon(c, corner).FontSize(n).TextColor(tint).Absolute().PassThrough()
 		switch i {
