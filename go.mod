@@ -23,3 +23,7 @@ require (
 	golang.org/x/net v0.61.0 // indirect
 	golang.org/x/text v0.43.0 // indirect
 )
+
+// The window's own corners: the framework keeps GTK's decorations and gives
+// the surface an alpha channel when the page rounds them.
+replace github.com/egoist/mygo => github.com/ruri4/mygo v0.0.0-20261108160933-eed627972270
